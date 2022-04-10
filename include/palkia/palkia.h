@@ -10,9 +10,7 @@ typedef int Result;
 
 class Connection {
  public:
-  Result fetch(void* ptr, ObjectId obj_id, size_t size) {
-    UNIMPLEMENTED;
-  }
+  Result fetch(void* ptr, ObjectId obj_id, size_t size);
  private:
   struct ibv_qp* qp_;
 };

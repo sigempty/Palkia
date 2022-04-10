@@ -17,5 +17,10 @@ link_directories(${GLOG_LINK_DIRS})
 
 # find_package(dpdk REQUIRED)
 
-add_subdirectory(src)
+include_directories(include)
+add_subdirectory(src/palkia)
+
+include_directories(src/palkia_service)
+add_subdirectory(src/palkia_service)
+
 add_subdirectory(app/stage1)
