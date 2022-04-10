@@ -16,11 +16,12 @@ include_directories(${GLOG_INCLUDE_DIRS})
 link_directories(${GLOG_LINK_DIRS})
 
 # find_package(dpdk REQUIRED)
+find_package(ibverbs REQUIRED)
+include_directories(${IBVERBS_INCLUDE_DIRS})
+link_directories(${IBVERBS_LIB_DIR})
 
 include_directories(include)
+
 add_subdirectory(src/palkia)
-
-include_directories(src/palkia_service)
 add_subdirectory(src/palkia_service)
-
 add_subdirectory(app/stage1)
