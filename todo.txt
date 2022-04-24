@@ -1,0 +1,4 @@
+dialga
+- add CMakeLists.txt
+- remove Register and Free use ODP
+- send headers using separate buffers
