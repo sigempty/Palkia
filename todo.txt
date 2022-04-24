@@ -1,4 +1,6 @@
 dialga
-- add CMakeLists.txt
+-[x] add CMakeLists.txt
 - remove Register and Free use ODP
 - send headers using separate buffers
+- implement delete
+- add gflags and glog

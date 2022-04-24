@@ -1,5 +1,5 @@
 #include "palkia/storage.h"
-// #include "./dialga.h"
+#include "./dialga.h"
 
 namespace palkia {
 
@@ -12,13 +12,12 @@ Result Storage::Put(ObjectId obj_id, void* ptr, size_t size) {
 }
 
 Result Storage::Invalidate(ObjectId obj_id) {
-  return 0;
+  UNIMPLEMENTED;
 }
 
 const std::shared_ptr<Storage>& Storage::_GetSharedRef() {
-  UNIMPLEMENTED;
-  // static std::shared_ptr<Storage> inst(new DialgaAdapter());
-  // return inst;
+  static std::shared_ptr<Storage> inst(new DialgaAdapter());
+  return inst;
 }
 
 Storage* Storage::Get() {

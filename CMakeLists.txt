@@ -11,14 +11,18 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+# Glog
 add_subdirectory(src/vendor/googlelog)
 include_directories(${GLOG_INCLUDE_DIRS})
 link_directories(${GLOG_LINK_DIRS})
 
-# find_package(dpdk REQUIRED)
+# ibverbs
 find_package(ibverbs REQUIRED)
 include_directories(${IBVERBS_INCLUDE_DIRS})
 link_directories(${IBVERBS_LIB_DIR})
+
+# dialga
+add_subdirectory(src/dialga)
 
 include_directories(include)
 
