@@ -1,58 +1,15 @@
 #pragma once
-#include <stdint.h>
 #include <stddef.h>
 #include <assert.h>
 #include <stdio.h>
 
 #include <utility>
 
-#define UNIMPLEMENTED assert(0)
+#include "palkia/common.h"
+#include "palkia/object.h"
+#include "palkia/swapable.h"
 
-typedef uint64_t ObjectId;
-typedef int Result;
-
-class Connection {
- public:
-  Result fetch(void* ptr, ObjectId obj_id, size_t size);
-  Result put(void* ptr, ObjectId obj_id, size_t size);
-  Result invalidate(ObjectId obj_id);
- private:
-  struct ibv_qp* qp_;
-};
-
-struct Metadata {
-  ObjectId obj_id;
-  Connection* conn;
-  struct {
-    uint64_t cached: 1;
-    uint64_t unused: 63;
-  } flags;
-};
-
-// struct Metadata {
-//   union {
-//     struct {
-//       uint64_t cached: 1;
-//       uint64_t unused: 15;
-//       uint64_t __never_use: 48;
-//     };
-//     Connection* conn;
-//   };
-// };
-
-/*!
- * struct Foo {
- *   int a;
- *   int b;
- * };
- * 
- * auto a = Remoteable<Foo>::Create();
- * a->b;
-*/
-
-inline ObjectId allocate_object_id() {
-  return 0;
-}
+namespace palkia {
 
 template <typename T>
 class RemotePtr {
@@ -62,8 +19,8 @@ class RemotePtr {
     auto ptr = RemotePtr<T>::dangling();
     ptr.metadata = new Metadata();
     // assign a global unique ID
-    ptr.metadata->obj_id = allocate_object_id();
-    ptr.metadata->flags.cached = true;
+    // ptr.metadata->obj_id = allocate_object_id();
+    // ptr.metadata->flags.cached = true;
     ptr.val = new T(std::forward(args)...);
     return std::move(ptr);
   }
@@ -74,7 +31,7 @@ class RemotePtr {
     delete val;
     val = nullptr;
     if (metadata) {
-      metadata->conn->invalidate(metadata->obj_id);
+      metadata->storage()->Invalidate(metadata->obj_id);
       delete metadata;
       metadata = nullptr;
     }
@@ -111,20 +68,24 @@ class RemotePtr {
     // panic if the pointer is empty
     assert(this);
     metadata->flags.cached = false;
-    auto ret = metadata->conn->put(val, metadata->obj_id, sizeof(T));
-    if (ret) {
-      return ret;
-    }
+    // auto ret = metadata->storage->Put(metadata->obj_id, val, sizeof(T));
+    // auto ret = val->swap_out(metadata->obj_id, metadata->storage());
+    // if (ret) {
+    //   return ret;
+    // }
     // TODO(cjr): delete it lazily
-    delete val;
-    val = nullptr;
-    return 0;
+    // delete val;
+    // val = nullptr;
+    // return 0;
+    return SwapOut<T>(&val, metadata->obj_id, metadata->storage());
   }
 
   // force to do a swap in
   inline Result swap_in() {
     // if RDMA
-    return metadata->conn->fetch(&val, metadata->obj_id, sizeof(T));
+    // return metadata->storage->Fetch(metadata->obj_id, &val, sizeof(T));
+    // return val->swap_in(metadata->obj_id, metadata->storage());
+    return SwapIn<T>(&val, metadata->obj_id, metadata->storage());
     // if local storage, do sth else
   }
 
@@ -177,3 +138,5 @@ class Remoteable {
  private:
   RemotePtr<T> ptr;
 };
+
+} // namespace palkia

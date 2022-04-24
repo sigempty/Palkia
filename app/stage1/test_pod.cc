@@ -7,7 +7,7 @@ struct Foo {
 };
 
 int main() {
-  auto a = Remoteable<Foo>();
+  auto a = palkia::Remoteable<Foo>();
   a->a = 10;
   (*a).b = 42;
   std::cout << a->b << std::endl;

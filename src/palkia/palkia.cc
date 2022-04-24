@@ -1,13 +1,5 @@
 #include "palkia/palkia.h"
 
-Result Connection::fetch(void* ptr, ObjectId obj_id, size_t size) {
-  UNIMPLEMENTED;
-}
+namespace palkia {
 
-Result Connection::put(void* ptr, ObjectId obj_id, size_t size) {
-  UNIMPLEMENTED;
-}
-
-Result Connection::invalidate(ObjectId obj_id) {
-  return 0;
-}
+}  // namespace palkia
