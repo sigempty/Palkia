@@ -4,7 +4,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -mtune=native")
 
 set(stage1_DEPENDENCIES googlelog palkia)
 set(stage1_INCLUDE_DIRS ${palkia_INCLUDE_DIR})
-set(stage1_LIBS glog palkia)
+set(stage1_LIBS ${palkia_LINKER_LIBS})
 
 # the executable
 add_executable(test_pod test_pod.cc)

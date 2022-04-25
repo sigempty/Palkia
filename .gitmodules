@@ -1,0 +1,4 @@
+[submodule "src/dialga"]
+	path = src/dialga
+	url = git@github.com:crazyboycjr/Dialga.git
+	branch = palkia
