@@ -41,9 +41,10 @@ template <typename T>
 Result SwapIn(typename PodType<T>::value_type** val, ObjectId obj_id,
               Storage* storage) {
   // allocate if val is nullptr
-  if (!*val) {
-    *val = new T();
-  }
+  // if (!*val) {
+  //   *val = new T();
+  // }
+  // Dialga will allocate for us.
   auto ret = storage->Fetch(obj_id, *val, sizeof(T));
   return ret;
 }

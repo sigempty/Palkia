@@ -27,4 +27,4 @@ target_link_libraries(palkia ${palkia_LINKER_LIBS_L})
 # exports
 list(APPEND palkia_LINKER_LIBS_L palkia)
 set(palkia_LINKER_LIBS ${palkia_LINKER_LIBS_L} PARENT_SCOPE)
-set(palkia_INCLUDE_DIR ${palkia_INCLUDE_DIR_L} PARENT_SCOPE)
+set(palkia_INCLUDE_DIRS ${palkia_INCLUDE_DIR_L} PARENT_SCOPE)

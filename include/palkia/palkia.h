@@ -11,6 +11,8 @@
 
 namespace palkia {
 
+void Init(int* argc, char** argv[]);
+
 template <typename T>
 class RemotePtr {
  public:

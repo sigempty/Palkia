@@ -4,3 +4,5 @@ dialga
 - send headers using separate buffers
 - implement delete
 - add gflags and glog
+- change RdmaManager::AllocateBuffer to spinlock
+- KVStore Get and KVServer buffer size is bounded
