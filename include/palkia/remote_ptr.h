@@ -48,6 +48,8 @@ class RemotePtr {
 
   ~RemotePtr<T>() {
     if (metadata_) {
+      // TODO(cjr): the address may come from RdmaManager after an swap in/out
+      // round trip, call delete here will fail in this case.
       delete val();
       val() = nullptr;
 

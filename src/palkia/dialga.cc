@@ -28,7 +28,7 @@ Result DialgaAdapter::Init() {
 }
 
 Result DialgaAdapter::Fetch(ObjectId obj_id, void* ptr, size_t size) {
-  CHECK(ptr);
+  // CHECK(ptr);
   std::vector<dialga::Key> keys {obj_id};
   std::vector<dialga::Value*> values{
       new dialga::Value(reinterpret_cast<uint64_t>(ptr), size)};
@@ -41,6 +41,8 @@ Result DialgaAdapter::Fetch(ObjectId obj_id, void* ptr, size_t size) {
     return rc;
   }
   while (!ready.load()) _mm_pause();
+  *(void**)ptr = (void*)values[0]->addr_;
+  CHECK(*(void**)ptr);
   return 0;
 }
 

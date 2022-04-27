@@ -44,6 +44,7 @@ class RemoteRef {
     // when inuse becomes 0, the Clerk can decide whether or not to evacuate this object
     if (ptr_) {
       ptr_->dec_refcnt();
+      ptr_ = nullptr;
     }
   }
 

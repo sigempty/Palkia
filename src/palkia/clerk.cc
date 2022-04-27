@@ -46,10 +46,16 @@ void Clerk::Add(Metadata* obj) {
   if (memory_used_ >= memory_watermark_) {
     // find some lucky baby and swap it out
     auto lucky_obj = cache_.Pop();
-    memory_used_ -= lucky_obj->size;
-    auto rc = lucky_obj->SwapOut();
-    CHECK(!rc) << "lucky_obj: " << lucky_obj->ToString();
-    prefetching_.Insert(lucky_obj->obj_id, lucky_obj);
+    if (lucky_obj) {
+      CHECK(lucky_obj->flags.cached) << lucky_obj->ToString();
+      memory_used_ -= lucky_obj->size;
+      auto rc = lucky_obj->SwapOut();
+      CHECK(!rc) << "evacuate failed lucky_obj: " << lucky_obj->ToString();
+      prefetching_.Insert(lucky_obj->obj_id, lucky_obj);
+    } else {
+      LOG(WARNING) << "nothing to pop, memory_used_: " << memory_used_
+                   << ", watermark: " << memory_watermark_;
+    }
   }
 }
 

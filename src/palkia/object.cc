@@ -18,8 +18,10 @@ Result Metadata::SwapOut() {
 }
 
 Result Metadata::SwapIn() {
+  auto rc = swap_ops.swap_in(&val, obj_id, storage());
+  flags.cached = true;
   Clerk::Get()->Add(this);
-  return swap_ops.swap_in(&val, obj_id, storage());
+  return rc;
 }
 
 }  // namespace palkia

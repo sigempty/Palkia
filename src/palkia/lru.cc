@@ -29,12 +29,15 @@ Metadata* LRU::Pop() {
     auto [obj_id, ts] = queue_.front();
     auto it = table_.find(obj_id);
     if (it != table_.end()) {
+      // it != end() means object is in local memory
       auto [new_ts, obj] = it->second;
       if (ts == new_ts && !obj->flags.inuse) {
         ret = obj;
+        table_.erase(it);
         break;
       }
     }
+    queue_.pop_front();
   }
   return ret;
 }

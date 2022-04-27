@@ -2,13 +2,13 @@ dialga
 -[x] add CMakeLists.txt
 -[x] remove Register and Free # use ODP
 -[x] send headers using separate buffers
+- For Get, the buffer is provided by the RdmaManager. That means every
+  swapped-in memory is registered. This creates too many MRs.
 - implement delete
 - add gflags and glog
 - <s>change RdmaManager::AllocateBuffer to spinlock</s>
 - <s>KVStore Get and KVServer buffer size is bounded</s> (have to change the
   communication method)
-- For Get, the buffer is provided by the RdmaManager. That means every
-  swapped-in memory is registered. This creates too many MRs.
 
 palkia
 - When to swap out?
@@ -19,3 +19,5 @@ palkia
 	- only maintain Remoteable objects
 
 - double check the refcnt
+
+- hide the type of RemotePtr

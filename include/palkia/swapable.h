@@ -32,6 +32,8 @@ Result SwapOut(typename PodType<T>::value_type** val, ObjectId obj_id,
   if (ret) {
     return ret;
   }
+  // TODO(cjr): the address may come from RdmaManager after an swap in/out round
+  // trip, call delete here will fail in this case.
   delete *val;
   *val = nullptr;
   return 0;
@@ -45,7 +47,7 @@ Result SwapIn(typename PodType<T>::value_type** val, ObjectId obj_id,
   //   *val = new T();
   // }
   // Dialga will allocate for us.
-  auto ret = storage->Fetch(obj_id, *val, sizeof(T));
+  auto ret = storage->Fetch(obj_id, val, sizeof(T));
   return ret;
 }
 
