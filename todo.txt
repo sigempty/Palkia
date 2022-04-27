@@ -22,3 +22,6 @@ palkia
 - double check the refcnt
 
 - hide the type of RemotePtr
+
+make sure rdma-kvstore has large enough tail room for GET AckMessage
+change the name from GetContext and get_ctx_ptr_ to Context and ctx_ptr_

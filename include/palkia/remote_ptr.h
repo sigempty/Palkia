@@ -113,8 +113,9 @@ class RemotePtr {
     if (!metadata_->flags.cached) {
       // fetch the object from the remote memory
       metadata_->SwapIn();
+    } else {
+      Clerk::Get()->Use(obj_id());
     }
-    Clerk::Get()->Use(obj_id());
     return val();
   }
 

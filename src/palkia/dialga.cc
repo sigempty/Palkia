@@ -40,7 +40,7 @@ void HexDump(ObjectId obj_id, void* ptr, size_t size) {
   for (size_t i = 0; i < size; i++) {
     off += snprintf(buf + off, 128 - off, "%02hhx ", ((uint8_t*)ptr)[i]);
   }
-  LOG(INFO) << "content: " << buf;
+  LOG(INFO) << "addr: " << ptr << ", content: " << buf;
 }
 
 Result DialgaAdapter::Fetch(ObjectId obj_id, void* ptr, size_t size) {
@@ -55,11 +55,9 @@ Result DialgaAdapter::Fetch(ObjectId obj_id, void* ptr, size_t size) {
     return rc;
   }
   while (!ready.load()) _mm_pause();
-  // *(void**)ptr = (void*)values[0]->addr_;
-  // CHECK(*(void**)ptr);
   CHECK_EQ(ptr, (void*)values[0]->addr_);
-  LOG(INFO) << "Fetch";
-  HexDump(obj_id, ptr, size);
+  // LOG(INFO) << "Fetch";
+  // HexDump(obj_id, ptr, size);
   delete values[0];
   return 0;
 }
@@ -69,13 +67,16 @@ Result DialgaAdapter::Put(ObjectId obj_id, void* ptr, size_t size) {
   std::vector<dialga::Key> keys {obj_id};
   std::vector<dialga::Value> values{
       dialga::Value(reinterpret_cast<uint64_t>(ptr), size)};
-  LOG(INFO) << "Put";
-  HexDump(obj_id, ptr, size);
-  auto rc = kvstore_->Put(keys, values);
+  // LOG(INFO) << "Put";
+  // HexDump(obj_id, ptr, size);
+  volatile std::atomic<bool> ready{false};
+  auto rc = kvstore_->Put(keys, values, [&ready]() { ready.store(true); });
   if (rc) {
     LOG(ERROR) << "Put failed for obj: " << obj_id << ", ptr: " << ptr << ", size: " << size;
     return rc;
   }
+  // TODO(cjr): I don't like this code.
+  while (!ready.load()) _mm_pause();
   return 0;
 }
 

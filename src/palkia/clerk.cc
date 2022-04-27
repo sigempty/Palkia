@@ -48,9 +48,9 @@ void Clerk::Add(Metadata* obj) {
     auto lucky_obj = cache_.Pop();
     if (lucky_obj) {
       CHECK(lucky_obj->flags.cached) << lucky_obj->ToString();
-      memory_used_ -= lucky_obj->size;
       auto rc = lucky_obj->SwapOut();
       CHECK(!rc) << "evacuate failed lucky_obj: " << lucky_obj->ToString();
+      memory_used_ -= lucky_obj->size;
       prefetching_.Insert(lucky_obj->obj_id, lucky_obj);
     } else {
       LOG(WARNING) << "nothing to pop, memory_used_: " << memory_used_

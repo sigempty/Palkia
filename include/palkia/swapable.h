@@ -32,8 +32,7 @@ Result SwapOut(typename PodType<T>::value_type** val, ObjectId obj_id,
   if (ret) {
     return ret;
   }
-  // TODO(cjr): the address may come from RdmaManager after an swap in/out round
-  // trip, call delete here will fail in this case.
+  // XXX(cjr): Delete this after the PUT is completed.
   delete *val;
   *val = nullptr;
   return 0;
