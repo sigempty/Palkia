@@ -27,5 +27,5 @@ palkia
 change the name from GetContext and get_ctx_ptr_ to Context and ctx_ptr_
 
 Priority
-- too much LRU::Touch is called.
+-[x] too much LRU::Touch is called.
 - write tests and do eval

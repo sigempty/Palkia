@@ -2,19 +2,34 @@
 #include <sys/sysinfo.h>
 #include <stdlib.h>
 #include <string>
+#include <fstream>
 
 #include <glog/logging.h>
 
 #include "palkia/clerk.h"
 #include "palkia/object.h"
 #include "palkia/palkia.h"
+#include "prism/utils.h"
 
 namespace palkia {
 
 size_t GetTotalFreeMemoryBytes() {
-  auto free_pages = get_avphys_pages();
-  auto page_size = sysconf(_SC_PAGESIZE);
-  return free_pages * page_size;
+  std::ifstream fin("/proc/self/cgroup");
+  std::string line;
+  std::string memory_cgroup;
+  const char* kMemoryPattern = "10:memory:";
+  const size_t kMemPatLen = strlen(kMemoryPattern);
+  while (std::getline(fin, line)) {
+    if (!strncmp(line.c_str(), kMemoryPattern, kMemPatLen)) {
+      memory_cgroup = line.substr(kMemPatLen);
+    }
+  }
+  auto mlimit_path = prism::FormatString(
+      "/sys/fs/cgroup/memory%s/memory.limit_in_bytes", memory_cgroup.c_str());
+  std::ifstream mlimit_fin(mlimit_path);
+  size_t mlimit;
+  mlimit_fin >> mlimit;
+  return mlimit;
 }
 
 Clerk::Clerk() {
