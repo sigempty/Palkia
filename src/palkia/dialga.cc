@@ -58,6 +58,8 @@ Result DialgaAdapter::Fetch(ObjectId obj_id, void* ptr, size_t size) {
   CHECK_EQ(ptr, (void*)values[0]->addr_);
   // LOG(INFO) << "Fetch";
   // HexDump(obj_id, ptr, size);
+  // remember to return this buffer to rdma
+  kvstore_->Free(values[0]);
   delete values[0];
   return 0;
 }
@@ -82,7 +84,7 @@ Result DialgaAdapter::Put(ObjectId obj_id, void* ptr, size_t size) {
 
 Result DialgaAdapter::Invalidate(ObjectId obj_id) {
   std::vector<dialga::Key> keys {obj_id};
-  auto rc = kvstore_->Delete(keys);
+  auto rc = 0 && kvstore_->Delete(keys);
   if (rc) {
     LOG(ERROR) << "Delete failed for obj: " << obj_id;
     return rc;

@@ -137,12 +137,12 @@ class RemotePtr {
   }
 
  private:
-  inline ObjectId obj_id() { return CHECK_NOTNULL(metadata_)->obj_id; }
+  inline ObjectId obj_id() { return DCHECK_NOTNULL(metadata_)->obj_id; }
   // inline T*& val() { return reinterpret_cast<T*>(CHECK_NOTNULL(metadata_)->val); }
   // inline T*& val() { return (T*&)(CHECK_NOTNULL(metadata_)->val); }
   inline T*& val() {
     // TODO(cjr): double-check the correctness
-    void*& v = CHECK_NOTNULL(metadata_)->val;
+    void*& v = DCHECK_NOTNULL(metadata_)->val;
     return (T*&)v;
   }
 

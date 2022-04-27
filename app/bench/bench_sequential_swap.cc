@@ -13,6 +13,7 @@ DEFINE_int32(num_objects, 50, "Number of objects");
 
 int main(int argc, char* argv[]) {
   FLAGS_logtostderr = 1;
+  gflags::ParseCommandLineFlags(&argc, &argv, true);
   int n = FLAGS_num_objects;
   std::vector<std::unique_ptr<Object>> vec;
   for (int i = 0; i < n; i++) {

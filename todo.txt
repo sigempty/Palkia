@@ -10,6 +10,10 @@ dialga
 - <s>change RdmaManager::AllocateBuffer to spinlock</s>
 - <s>KVStore Get and KVServer buffer size is bounded</s> (have to change the
   communication method)
+- no connection tear down handler? when to replenish credits
+- when manager_->AllocateBuffer cannot acquire a new buffer (e.g.,
+  buf_num_ < recv_depth)
+- improve the connection handling and resource recycling
 
 palkia
 - When to swap out?
