@@ -23,7 +23,7 @@ Clerk::Clerk() {
   // overwrite watermark if env present
   const char* watermark = getenv(MEMORY_WATERMARK);
   if (watermark) {
-    memory_watermark_ = std::stoi(watermark);
+    memory_watermark_ = std::stoll(watermark);
   }
 
   LOG(INFO) << "Memory watermark: " << memory_watermark_ << " bytes";

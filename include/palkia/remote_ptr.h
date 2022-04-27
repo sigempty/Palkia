@@ -11,6 +11,9 @@ namespace palkia {
 template <typename T>
 class Remoteable;
 
+template <typename T>
+class RemoteRef;
+
 // template <typename T>
 // class RemoteSlice {
 //  public:
@@ -33,6 +36,7 @@ class RemotePtr {
  public:
   friend class Clerk;
   friend class Remoteable<T>;
+  friend class RemoteRef<T>;
 
   template <typename... Args>
   static RemotePtr<T> allocate_remote(Args &&... args) {
@@ -89,6 +93,13 @@ class RemotePtr {
    */
   inline void inc_refcnt() {
     // TODO(cjr): A correct implementation should check for integer overflow
+    if (metadata_->flags.inuse == 0) {
+      if (!metadata_->flags.cached) {
+        // fetch the object from the remote memory
+        metadata_->SwapIn();
+      }
+      Clerk::Get()->Use(obj_id());
+    }
     metadata_->flags.inuse += 1;
   }
 
@@ -100,6 +111,10 @@ class RemotePtr {
   inline void dec_refcnt() {
     // TODO(cjr): A correct implementation should check for integer overflow
     metadata_->flags.inuse -= 1;
+    if (metadata_->flags.inuse == 0) {
+      // An object is considered in use until all references are destroyed
+      Clerk::Get()->Use(obj_id());
+    }
   }
 
   // RefCell<T> obj;
@@ -110,12 +125,6 @@ class RemotePtr {
   // }
 
   inline T* get() {
-    if (!metadata_->flags.cached) {
-      // fetch the object from the remote memory
-      metadata_->SwapIn();
-    } else {
-      Clerk::Get()->Use(obj_id());
-    }
     return val();
   }
 
