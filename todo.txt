@@ -21,11 +21,11 @@ palkia
 
 - double check the refcnt
 
-- hide the type of RemotePtr
+- hide the interface of RemotePtr from user
 
 - make sure rdma-kvstore has large enough tail room for GET AckMessage
 change the name from GetContext and get_ctx_ptr_ to Context and ctx_ptr_
 
 Priority
 -[x] too much LRU::Touch is called.
-- write tests and do eval
+-[x] write tests and do eval
