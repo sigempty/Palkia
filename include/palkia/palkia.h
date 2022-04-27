@@ -11,8 +11,8 @@ void Init(int* argc, char** argv[]);
 template <typename T>
 class RemoteRef {
  public:
-  explicit RemoteRef<T>(RemotePtr<T>& ref) : ref_(ref) {
-    ref_.inc_refcnt();
+  explicit RemoteRef<T>(RemotePtr<T>* ptr) : ptr_(ptr) {
+    ptr_->inc_refcnt();
   }
 
   // copy constructor
@@ -22,8 +22,8 @@ class RemoteRef {
 
   // copy assignment
   RemoteRef<T>& operator=(RemoteRef<T>& other) {
-    ref_ = other.ref_;
-    ref_.inc_refcnt();
+    ptr_ = other.ptr_;
+    ptr_->inc_refcnt();
     return *this;
   }
 
@@ -34,14 +34,17 @@ class RemoteRef {
 
   // move assignment
   RemoteRef<T>& operator=(RemoteRef<T>&& other) {
-    ref_ = other.ref_;
+    ptr_ = other.ptr_;
+    other.ptr_ = nullptr;
     return *this;
   }
 
   // destructor
   ~RemoteRef<T>() {
     // when inuse becomes 0, the Clerk can decide whether or not to evacuate this object
-    ref_.dec_refcnt();
+    if (ptr_) {
+      ptr_->dec_refcnt();
+    }
   }
 
   inline T& operator*() {
@@ -54,10 +57,10 @@ class RemoteRef {
 
  private:
   inline T& get_ref() {
-    return *ref_;
+    return **ptr_;
   }
 
-  RemotePtr<T>& ref_;
+  RemotePtr<T>* ptr_ {nullptr};
 };
 
 // Remoteable is essentially a RefCell in Rust.
@@ -85,6 +88,8 @@ class Remoteable {
   Remoteable<T>& operator=(Remoteable<T>& other) = delete;
 
   Remoteable<T>& operator=(Remoteable<T>&& other) {
+    CHECK(other.ptr_.metadata_->flags.inuse == 0)
+        << "cannot move while being referenced";
     ptr_ = std::move(other.ptr_);
     return *this;
   }
@@ -95,7 +100,7 @@ class Remoteable {
 
   // The most important API for this structure.
   inline RemoteRef<T> deref() {
-    return RemoteRef(ptr_);
+    return RemoteRef(&ptr_);
   }
 
  private:
