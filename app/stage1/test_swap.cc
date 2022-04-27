@@ -26,6 +26,7 @@ int main(int argc, char* argv[]) {
     byte += 1; // let it overflow
   }
 
+  int cnt = 0;
   byte = 0;
   for (auto& rp : pages) {
     auto ref = rp.deref();
@@ -33,7 +34,8 @@ int main(int argc, char* argv[]) {
     for (auto it = ref->page.begin(); it != ref->page.end(); it++) {
       sum += static_cast<size_t>(*it);
     }
-    CHECK_EQ(sum, ref->page.size() * byte);
+    CHECK_EQ(sum, ref->page.size() * byte) << "cnt: " << cnt;
+    cnt += 1;
     byte += 1;
   }
 }

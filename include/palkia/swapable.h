@@ -43,11 +43,11 @@ template <typename T>
 Result SwapIn(typename PodType<T>::value_type** val, ObjectId obj_id,
               Storage* storage) {
   // allocate if val is nullptr
-  // if (!*val) {
-  //   *val = new T();
-  // }
-  // Dialga will allocate for us.
-  auto ret = storage->Fetch(obj_id, val, sizeof(T));
+  if (!*val) {
+    *val = new T();
+  }
+  // // Dialga will allocate for us.
+  auto ret = storage->Fetch(obj_id, *val, sizeof(T));
   return ret;
 }
 
@@ -56,10 +56,6 @@ struct SwapOps {
   Result (*swap_in)(void**, size_t, Storage*);
   Result (*swap_out)(void**, size_t, Storage*);
 
-  // template <typename T>
-  // explicit SwapOps(T*)
-  //   : swap_in((Result (*)(void**, size_t, Storage*))(void*)SwapIn<T>),
-  //     swap_out((Result (*)(void**, size_t, Storage*))(void*)SwapOut<T>) {}
   template <typename T>
   explicit SwapOps(T*) {
     swap_in = (Result (*)(void**, size_t, Storage*))((void*)SwapIn<T>);
