@@ -1,144 +1,107 @@
 #pragma once
-#include <stddef.h>
-#include <assert.h>
-#include <stdio.h>
-
 #include <utility>
 
 #include "palkia/common.h"
-#include "palkia/object.h"
-#include "palkia/swapable.h"
+#include "palkia/remote_ptr.h"
 
 namespace palkia {
 
 void Init(int* argc, char** argv[]);
 
 template <typename T>
-class RemotePtr {
+class RemoteRef {
  public:
-  template <typename... Args>
-  static RemotePtr<T> allocate_remote(Args &&... args) {
-    auto ptr = RemotePtr<T>::dangling();
-    ptr.metadata = new Metadata();
-    // assign a global unique ID
-    // ptr.metadata->obj_id = allocate_object_id();
-    // ptr.metadata->flags.cached = true;
-    ptr.val = new T(std::forward(args)...);
-    return std::move(ptr);
+  explicit RemoteRef<T>(RemotePtr<T>& ref) : ref_(ref) {
+    ref_.inc_refcnt();
   }
 
-  RemotePtr<T>() { }
-
-  ~RemotePtr<T>() {
-    delete val;
-    val = nullptr;
-    if (metadata) {
-      metadata->storage()->Invalidate(metadata->obj_id);
-      delete metadata;
-      metadata = nullptr;
-    }
+  // copy constructor
+  RemoteRef<T>(RemoteRef<T>& other) {
+    *this = other;
   }
 
-  RemotePtr<T>(const RemotePtr<T>& other) = delete;
-  RemotePtr<T>& operator=(RemotePtr<T>& other) = delete;
-
-  RemotePtr<T>& operator=(RemotePtr<T>&& other) {
-    val = other.val;
-    metadata = other.metadata;
-    other.val = nullptr;
-    other.metadata = nullptr;
+  // copy assignment
+  RemoteRef<T>& operator=(RemoteRef<T>& other) {
+    ref_ = other.ref_;
+    ref_.inc_refcnt();
     return *this;
   }
 
-  RemotePtr<T>(RemotePtr<T>&& other) {
+  // move constructor
+  RemoteRef<T>(RemoteRef<T>&& other) {
     *this = std::move(other);
   }
 
-
-  inline operator bool() const {
-    return val && metadata;
+  // move assignment
+  RemoteRef<T>& operator=(RemoteRef<T>&& other) {
+    ref_ = other.ref_;
+    return *this;
   }
 
-  static inline RemotePtr<T> dangling() {
-    auto ptr = RemotePtr<T>();
-    return ptr;
-  }
-
-  // force to swap out to remote memory
-  // if the operation fails, the value should still be there in the local memory
-  inline Result swap_out() {
-    // panic if the pointer is empty
-    assert(this);
-    metadata->flags.cached = false;
-    // auto ret = metadata->storage->Put(metadata->obj_id, val, sizeof(T));
-    // auto ret = val->swap_out(metadata->obj_id, metadata->storage());
-    // if (ret) {
-    //   return ret;
-    // }
-    // TODO(cjr): delete it lazily
-    // delete val;
-    // val = nullptr;
-    // return 0;
-    return SwapOut<T>(&val, metadata->obj_id, metadata->storage());
-  }
-
-  // force to do a swap in
-  inline Result swap_in() {
-    // if RDMA
-    // return metadata->storage->Fetch(metadata->obj_id, &val, sizeof(T));
-    // return val->swap_in(metadata->obj_id, metadata->storage());
-    return SwapIn<T>(&val, metadata->obj_id, metadata->storage());
-    // if local storage, do sth else
-  }
-
-  inline T* get() {
-    if (!metadata->flags.cached) {
-      // fetch the object from the remote memory
-      swap_in();
-    }
-    return val;
+  // destructor
+  ~RemoteRef<T>() {
+    // when inuse becomes 0, the Clerk can decide whether or not to evacuate this object
+    ref_.dec_refcnt();
   }
 
   inline T& operator*() {
-    return *get();
+    return get_ref();
   }
 
   inline T* operator->() {
-    return get();
+    return &get_ref();
   }
 
  private:
+  inline T& get_ref() {
+    return *ref_;
+  }
 
-  T* val = nullptr;
-  Metadata* metadata = nullptr;
+  RemotePtr<T>& ref_;
 };
 
-template <typename T, typename... Args>
-RemotePtr<T> make_remote(Args &&... args) {
-  return RemotePtr<T>::allocate_remote(std::forward(args)...);
-}
-
+// Remoteable is essentially a RefCell in Rust.
+// It is not a smart pointer. To call a method of its inner object, the user
+// must first call `deref()` (like borrow() in Rust).
+// This deref() method will return an `RemoteRef`.
+// `RemoteRef` is in essential DerefScope + smart pointer (Deref trait).
+// DerefScope in AIFM does not prevent the user from misuse. The user can still
+// forget to add a DerefScope for a remote object, dealying the error to
+// runtime.
 template <typename T>
 class Remoteable {
  public:
-  explicit Remoteable<T>() {
-    ptr = make_remote<T>();
+  // constructor
+  template <typename... Args>
+  explicit Remoteable<T>(Args &&... args) {
+    ptr_ = make_remote<T>(std::forward(args)...);
   }
 
-  inline T& deref() {
-    return *ptr;
+  Remoteable<T>() {
+    ptr_ = make_remote<T>();
+  }
+  ~Remoteable<T>() = default;
+  Remoteable<T>(const Remoteable<T>& other) = delete;
+  Remoteable<T>& operator=(Remoteable<T>& other) = delete;
+
+  Remoteable<T>& operator=(Remoteable<T>&& other) {
+    ptr_ = std::move(other.ptr_);
+    return *this;
   }
 
-  inline T& operator*() {
-    return deref();
+  Remoteable<T>(Remoteable<T>&& other) {
+    *this = std::move(other);
   }
 
-  inline T* operator->() {
-    return &deref();
+  // The most important API for this structure.
+  inline RemoteRef<T> deref() {
+    return RemoteRef(ptr_);
   }
 
  private:
-  RemotePtr<T> ptr;
+  RemotePtr<T> ptr_;
 };
+
+static_assert(sizeof(Remoteable<int>) == 8);
 
 } // namespace palkia

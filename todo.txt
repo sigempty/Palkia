@@ -17,3 +17,5 @@ palkia
 	- custom memory alllocator / hook new/malloc?
 	- DerefScope?
 	- only maintain Remoteable objects
+
+- double check the refcnt
