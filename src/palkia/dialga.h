@@ -1,6 +1,7 @@
 #pragma once
 #include "palkia/storage.h"
 #include "dialga/kvstore.hpp"
+#include "dialga/config.hpp"
 
 namespace palkia {
 

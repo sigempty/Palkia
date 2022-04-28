@@ -10,12 +10,12 @@ namespace palkia {
  *
  * If the operation fails, the value should still be there in the local memory
  */
-template <typename T>
-Result SwapOut(T** val, ObjectId obj_id, Storage* storage);
+// template <typename T>
+// Result SwapOut(T** val, ObjectId obj_id, Storage* storage);
 
 /*! \brief force to do a swap in */
-template <typename T>
-Result SwapIn(T** val, ObjectId obj_id, Storage* storage);
+// template <typename T>
+// Result SwapIn(T** val, ObjectId obj_id, Storage* storage);
 
 // IsPod
 template <typename T,
@@ -32,6 +32,7 @@ Result SwapOut(typename PodType<T>::value_type** val, ObjectId obj_id,
   if (ret) {
     return ret;
   }
+  // XXX(cjr): Delete this after the PUT is completed.
   delete *val;
   *val = nullptr;
   return 0;
@@ -41,13 +42,25 @@ template <typename T>
 Result SwapIn(typename PodType<T>::value_type** val, ObjectId obj_id,
               Storage* storage) {
   // allocate if val is nullptr
-  // if (!*val) {
-  //   *val = new T();
-  // }
-  // Dialga will allocate for us.
+  if (!*val) {
+    *val = new T();
+  }
+  // // Dialga will allocate for us.
   auto ret = storage->Fetch(obj_id, *val, sizeof(T));
   return ret;
 }
+
+// To enable runtime dispatch.
+struct SwapOps {
+  Result (*swap_in)(void**, size_t, Storage*);
+  Result (*swap_out)(void**, size_t, Storage*);
+
+  template <typename T>
+  explicit SwapOps(T*) {
+    swap_in = (Result (*)(void**, size_t, Storage*))((void*)SwapIn<T>);
+    swap_out = (Result (*)(void**, size_t, Storage*))((void*)SwapOut<T>);
+  }
+};
 
 // class ISwap {
 //  public:
