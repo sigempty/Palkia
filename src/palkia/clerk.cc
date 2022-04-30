@@ -34,13 +34,15 @@ size_t GetTotalFreeMemoryBytes() {
 
 Clerk::Clerk() {
   // initialize watermark from system
-  memory_watermark_ = GetTotalFreeMemoryBytes();
+  auto free_memory = GetTotalFreeMemoryBytes();
+  memory_watermark_ = (size_t)(free_memory * 0.8);
   // overwrite watermark if env present
   const char* watermark = getenv(MEMORY_WATERMARK);
   if (watermark) {
     memory_watermark_ = std::stoll(watermark);
   }
 
+  LOG(INFO) << "Total available memory: " << free_memory << " bytes";
   LOG(INFO) << "Memory watermark: " << memory_watermark_ << " bytes";
 }
 
